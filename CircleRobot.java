@@ -11,15 +11,14 @@ import java.util.*;
  */
 public class CircleRobot extends AdvancedRobot
 {
-	private String targetRobot;
-	private HashMap<String, RobotData> robotMap;
+	private HashMap<String, RobotData> robots;
 
 	/**
 	 * run: CircleRobot's default behavior
 	 */
 	public void run() {
 		// Initialization of the robot should be put here
-		robotMap = new HashMap<String, RobotData>();
+	 robots = new HashMap<String, RobotData>();
 
 		// After trying out your robot, try uncommenting the import at the top,
 		// and the next line:
@@ -28,20 +27,26 @@ public class CircleRobot extends AdvancedRobot
 
 		// Robot main loop
 		while(true) {
-			turnRadarLeft(10000);
-			this.PointAt(targetRobot);
+			turnRadarLeft(360);
+			Aim();
 		}
 	}
 
-	public void PointAt(String target)
+	private void Aim()
 	{
 		double x = getX();
 		double y = getY();
-		RobotData robot = this.robotMap.get(this.targetRobot);
+		RobotData robot = GetNearestRobot();
 		double targetGunHeading = Math.atan((robot.Y-y)/(robot.X-x));
 		double currentGunHeading = getGunHeading();
-		double turnAngle = currentGunHeading - targetGunHeading;
-		setTurnGunLeft(turnAngle);
+		double deltaGunHeading = currentGunHeading - targetGunHeading;
+		turnGunLeft(deltaGunHeading);
+	}
+
+	RobotData GetNearestRobot()
+	{
+		Map.Entry<String, RobotData> entry=robots.entrySet().iterator().next();
+		return entry.getValue();
 	}
 
 	/**
@@ -49,19 +54,12 @@ public class CircleRobot extends AdvancedRobot
 	 */
 	public void onScannedRobot(ScannedRobotEvent e) {
 		// Replace the next line with any behavior you would like
-		double distance = e.getDistance();
-		double bearing = e.getBearing();
-
 		RobotData robot = new RobotData();
-		robot.X = 10; // TODO: calculate x and y
-		robot.Y = 10;
 		robot.Energy = e.getEnergy();
 		robot.Heading = e.getHeading();
-		robotMap.put(e.getName(), robot);
-		if (targetRobot == "")
-		{
-			targetRobot = e.getName();
-		}
+		robot.X = e.getDistance() * Math.cos(e.getBearing());
+		robot.Y = e.getDistance() * Math.sin(e.getBearing());
+	 robots.put(e.getName(), robot);
 	}
 
 	/**
